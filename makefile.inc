@@ -12,10 +12,11 @@ CPPFLAGS     = -DFINTEGER=int  -fopenmp -I/usr/local/stow/cuda-10.0/include  -g 
 -I${FAISS_HOME} -I${FAISS_HOME}/.. -lfaiss -L$(FAISS_HOME)
 CXXFLAGS     = -fPIC -m64 -Wno-sign-compare -g -O3 -Wall -Wextra
 CPUFLAGS     = -mpopcnt -msse4
-LDFLAGS      = -fopenmp  -L/usr/local/stow/cuda-10.0/lib64 
-LIBS         = -lopenblas   -lcudart -lcublas 
+LDFLAGS      = -fopenmp  -L/usr/local/stow/cuda-10.0/lib64
+LIBS         = -lopenblas   -lcudart -lcublas
 PYTHONCFLAGS =   -I/home/yc3390/anaconda3/include
 SWIGFLAGS    = -DSWIGWORDSIZE64
+RTFLAGS      = -Wl,-rpath=${FAISS_HOME}
 
 NVCC         = /usr/local/stow/cuda-10.0/bin/nvcc
 CUDA_ROOT    = /usr/local/stow/cuda-10.0
@@ -47,8 +48,3 @@ MKDIR_P      = /usr/bin/mkdir -p
 PYTHON       = python3 
 SWIG         = swig
 AR          ?= ar
-
-prefix      ?= /usr/local
-exec_prefix ?= ${prefix}
-libdir       = ${exec_prefix}/lib
-includedir   = ${prefix}/include
