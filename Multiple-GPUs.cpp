@@ -17,6 +17,7 @@
 #define GPU_KNN_TEST 1
 #define CPU_ANN_TEST 0     
 #define GPU_ANN_TEST 0
+const int sanity_query_number = 1;
 
 #include <cstdio>
 #include <cstdlib>
@@ -117,9 +118,6 @@ int main() {
     option.shard = true;
 
 
-    for(int i = 0; i < 128; i++)
-      std::cout << xb[i] << std::endl;
-
 #if GPU_KNN_TEST >0
     faiss::IndexFlatL2 cpu_index(d);
 
@@ -147,26 +145,26 @@ int main() {
          << " us" << std::endl;
 
     {       // sanity check: search 5 first vectors of xb
-        long *I = new long[k * 5];
-        float *D = new float[k * 5];
+        long *I = new long[k * sanity_query_number];
+        float *D = new float[k * sanity_query_number];
 
         start = std::chrono::steady_clock::now();
-        gpu_index->search(5, xb, k, D, I);
+        gpu_index->search(sanity_query_number, xb, k, D, I);
         end = std::chrono::steady_clock::now();
-        std::cout << "[SEARCH TIME] [GPU BF] search " << 5 << " records in microseconds : "
+        std::cout << "[SEARCH TIME] [GPU BF] search " << sanity_query_number << " records in microseconds : "
              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
              << " us" << std::endl;
 
         // print results
         printf("I=\n");
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < sanity_query_number; i++) {
             for(int j = 0; j < k; j++)
                 printf("%5ld ", I[i * k + j]);
             printf("\n");
         }
 
         printf("D=\n");
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < sanity_query_number; i++) {
             for(int j = 0; j < k; j++)
                 printf("%7g ", D[i * k + j]);
             printf("\n");
@@ -215,6 +213,7 @@ int main() {
 #if CPU_KNN_TEST > 0
     faiss::IndexFlatL2 index(d);           // call constructor
     printf("is_trained = %s\n", index.is_trained ? "true" : "false");
+
     start = std::chrono::steady_clock::now();
     index.add(nb, xb);                     // add vectors to the index
     end = std::chrono::steady_clock::now();
@@ -226,21 +225,26 @@ int main() {
 
 
     {       // sanity check: search 5 first vectors of xb
-        long *I = new long[k * 5];
-        float *D = new float[k * 5];
+        long *I = new long[k * sanity_query_number];
+        float *D = new float[k * sanity_query_number];
 
-        index.search(5, xb, k, D, I);
+        auto start = std::chrono::steady_clock::now();
+        index.search(sanity_query_number, xb, k, D, I);
+        auto end = std::chrono::steady_clock::now();
+        std::cout << "[SEARCH TIME] [CPU BF] search " << sanity_query_number << " records in microseconds : "
+             << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
+             << " us" << std::endl;
 
         // print results
         printf("I=\n");
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < sanity_query_number; i++) {
             for(int j = 0; j < k; j++)
                 printf("%5ld ", I[i * k + j]);
             printf("\n");
         }
 
         printf("D=\n");
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < sanity_query_number; i++) {
             for(int j = 0; j < k; j++)
                 printf("%7g ", D[i * k + j]);
             printf("\n");
