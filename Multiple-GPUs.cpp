@@ -5,19 +5,39 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#define TIME_FUNC(expression_, method_, job_) \
-    start = std::chrono::steady_clock::now(); \
-    expression_                               \
-    end = std::chrono::steady_clock::now();   \
-    std::cout << "[TIME] for job_ using method_  " << " in microseconds : " \
+#define PRINT_TIME_FUNC(EXPR, method_, job_)                                           \
+    start = std::chrono::steady_clock::now();                                          \
+    EXPR;                                                                              \
+    end = std::chrono::steady_clock::now();                                            \
+    std::cout << "[TIME] for job_ using method_  " << " in microseconds : "            \
          << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() \
-         << " us" << std::endl; \
+         << " us" << std::endl;                                                        \
 
 #define CPU_KNN_TEST 1     
 #define GPU_KNN_TEST 1
 #define CPU_ANN_TEST 0     
 #define GPU_ANN_TEST 0
+
+#define TEST_TIME
+
+#ifdef TEST_TIME
+#define TEST_TIME_FUNC(EXPR, MAX_TIME, TEST_NAME)                                          \
+  {                                                                                        \
+    for(int i = 0; i < MAX_TIME; i ++){                                                    \
+      start = std::chrono::steady_clock::now();                                            \
+      EXPR;                                                                                \
+      end = std::chrono::steady_clock::now();                                              \
+      std::cout << "[SEARCH TIME] "<< TEST_NAME << " " << i << " records in us: "          \
+           << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()   \
+           << " us" << std::endl;                                                          \
+    }                                                                                      \
+  }                                                                                        
+#else
+#define TEST_TIME_FUNC(EXPR, MAX_TIME, TEST_NAME) {}
+#endif
+
 const int sanity_query_number = 1;
+const int test_maxtime = 1000;
 
 #include <cstdio>
 #include <cstdlib>
@@ -81,10 +101,10 @@ int *ivecs_read(const char *fname, size_t *d_out, size_t *n_out)
 
 int main() {
     // Basic parameters
-    size_t d = 128;                        // feature dimension
-    int nlist =  100000;                   // number of centroids in coarse quantizer
-    int m = 8;                             // sub-quantizer
-    int k = 10;                            // k-NN k.
+    size_t d = 128;                              // feature dimension
+    const int nlist =  100000;                   // number of centroids in coarse quantizer
+    const int m = 8;                             // sub-quantizer
+    const int k = 10;                            // k-NN k.
 
     // Load sift 1M Data
     // Training data
@@ -110,7 +130,9 @@ int main() {
     std::vector<int> devs;
     for(int i = 0; i < ngpus; i++) {
         res.push_back(new faiss::gpu::StandardGpuResources);
-        devs.push_back(i);
+        if(i == 1){
+            devs.push_back(i);
+        }
     }
 
     // If sharded or replicated in multiple GPUs.
@@ -123,13 +145,23 @@ int main() {
 
     printf("migrating index from cpu to gpu");
     start = std::chrono::steady_clock::now();
-    faiss::Index *gpu_index =
-        faiss::gpu::index_cpu_to_gpu_multiple(
-            res,
-            devs,
-            &cpu_index,
-            &option
-        );
+    faiss::Index *gpu_index;
+    if (devs.size() > 1){
+        gpu_index =faiss::gpu::index_cpu_to_gpu_multiple(
+                      res,
+                      devs,
+                      &cpu_index,
+                      &option
+                  );}
+    else
+    {
+        printf("DEBUG INFO");
+        gpu_index =faiss::gpu::index_cpu_to_gpu(
+                      res[0],
+                      1,
+                      &cpu_index
+                  );
+    }
     end = std::chrono::steady_clock::now();
     std::cout << "[Migrating time] "
          << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
@@ -181,10 +213,11 @@ int main() {
         start = std::chrono::steady_clock::now();
         gpu_index->search(nq, xq, k, D, I);
         end = std::chrono::steady_clock::now();
-        printf("ntotal = %ld\n", gpu_index->ntotal);
         std::cout << "[SEARCH TIME] [GPU BF] search " << nq << " records in microseconds : "
              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
              << " us" << std::endl;
+
+        TEST_TIME_FUNC(gpu_index->search(i, xq, k, D, I), test_maxtime, "GPU_BF")
 
         // print results
         printf("I (5 first results)=\n");
@@ -268,6 +301,7 @@ int main() {
          << " us" << std::endl;
 
         // print results
+        TEST_TIME_FUNC(index.search(i, xq, k, D, I), test_maxtime, "CPU_BF")
         printf("I (5 first results)=\n");
         for(int i = 0; i < 5; i++) {
             for(int j = 0; j < k; j++)

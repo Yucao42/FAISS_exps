@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 # Modify this to where FAISS is installed.
-FAISS_HOME   = ${HOME}/Documents/faiss
+FAISS_HOME   = ${HOME}/Documents/faiss_time/faiss
 
 CXX          = g++ -std=c++11
 CXXCPP       = g++ -std=c++11 -E
