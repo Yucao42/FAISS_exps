@@ -1,19 +1,39 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define CPU_KNN_TEST 1     
+#define CPU_KNN_TEST 0     
 #define GPU_KNN_TEST 1
 #define CPU_ANN_TEST 0     
 #define GPU_ANN_TEST 0
 
 // if multiple time is tested
 #define TEST_TIME
+#undef TEST_TIME
+
+// Do sanity check or not
+const bool do_sanity_check = false;
+
+// Print results or not
+const bool do_print_results = false;
 
 // Sanity check using samples
 const int sanity_query_number = 1;
 
 // Test 0 to test_maxtime samples
 const int test_max_number = 1000;
+
+// Explicit set number of query, default 0 will be ignored
+const size_t nq_ = 33;
+
+// Explicit set number of base vectors added to DB, default 0 will be ignored
+const size_t nb_ = 0;
+
+// Timers
+auto start = std::chrono::steady_clock::now();
+auto end = std::chrono::steady_clock::now();
+
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 #ifdef TEST_TIME
 #define TEST_TIME_FUNC(EXPR, MAX_TIME, TEST_NAME)                                          \
@@ -31,13 +51,20 @@ const int test_max_number = 1000;
 #define TEST_TIME_FUNC(EXPR, MAX_TIME, TEST_NAME) {}
 #endif
 
-#define PRINT_TIME_FUNC(EXPR, method_, job_)                                           \
-    start = std::chrono::steady_clock::now();                                          \
-    EXPR;                                                                              \
-    end = std::chrono::steady_clock::now();                                            \
-    std::cout << "[TIME] for job_ using method_  " << " in microseconds : "            \
-         << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() \
-         << " us" << std::endl;                                                        \
+#define PRINT_TIME_FUNC(EXPR, method_, job_)                                               \
+    start = std::chrono::steady_clock::now();                                              \
+    EXPR;                                                                                  \
+    end = std::chrono::steady_clock::now();                                                \
+    std::cout << "[TIME] for job_ using method_  " << " in microseconds : "                \
+         << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()     \
+         << " us" << std::endl;                                                            \
+
+#define CHECK_REPLACE(X, X_)                                                               \
+  {                                                                                        \
+    if(X_){                                                                                \
+      X = MIN(X, X_);                                                                      \
+    }                                                                                      \
+  }                                                                                        \
 
 float * fvecs_read (const char *fname,
                     size_t *d_out, size_t *n_out)

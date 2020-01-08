@@ -17,7 +17,7 @@ make all
 
 
 ```bash
-nvprof --log-file prof.csv --csv ./Multiple-GPUs # to csv
-nvprof --export-profile a.nvvp ./Multiple-GPUs   # to nvvp visualization
+nvprof --log-file prof.csv --csv ./YOUR_BINARY # to csv
+nvprof --export-profile a.nvvp   ./YOUR_BINARY # to nvvp visualization
 ```
 

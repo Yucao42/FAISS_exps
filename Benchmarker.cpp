@@ -43,8 +43,11 @@ int main() {
     float *xq = fvecs_read("sift/sift_query.fvecs", &d3, &nq);
     assert(d == d3 || !"query does not have same dimension as train set");
 
-    auto start = std::chrono::steady_clock::now();
-    auto end = std::chrono::steady_clock::now();
+    // If predefined sizes
+    CHECK_REPLACE(nq, nq_)
+    CHECK_REPLACE(nb, nb_)
+    printf("number of base vectors %d \n", nb);
+
     int ngpus = faiss::gpu::getNumDevices();
     printf("Number of GPUs: %d\n", ngpus);
 
@@ -75,9 +78,7 @@ int main() {
                       &cpu_index,
                       &option
                   );}
-    else
-    {
-        printf("DEBUG INFO");
+    else{
         gpu_index =faiss::gpu::index_cpu_to_gpu(
                       res[0],
                       1,
@@ -98,6 +99,7 @@ int main() {
          << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
          << " us" << std::endl;
 
+    if (do_sanity_check)
     {       // sanity check: search 5 first vectors of xb
         long *I = new long[k * sanity_query_number];
         float *D = new float[k * sanity_query_number];
@@ -139,21 +141,25 @@ int main() {
              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
              << " us" << std::endl;
 
+        // Test query time for query number from 0 to test_max_number
         TEST_TIME_FUNC(gpu_index->search(i, xq, k, D, I), test_max_number, "GPU_BF")
 
         // print results
-        printf("I (5 first results)=\n");
-        for(int i = 0; i < 5; i++) {
-            for(int j = 0; j < k; j++)
-                printf("%5ld ", I[i * k + j]);
-            printf("\n");
-        }
+        if(do_print_results)
+        {
+          printf("I (5 first results)=\n");
+          for(int i = 0; i < 5; i++) {
+              for(int j = 0; j < k; j++)
+                  printf("%5ld ", I[i * k + j]);
+              printf("\n");
+          }
 
-        printf("I (5 last results)=\n");
-        for(int i = nq - 5; i < nq; i++) {
-            for(int j = 0; j < k; j++)
-                printf("%5ld ", I[i * k + j]);
-            printf("\n");
+          printf("I (5 last results)=\n");
+          for(int i = nq - 5; i < nq; i++) {
+              for(int j = 0; j < k; j++)
+                  printf("%5ld ", I[i * k + j]);
+              printf("\n");
+          }
         }
 
         delete [] I;
@@ -179,6 +185,7 @@ int main() {
     printf("ntotal = %ld\n", index.ntotal);
 
 
+    if (do_sanity_check)
     {       // sanity check: search 5 first vectors of xb
         long *I = new long[k * sanity_query_number];
         float *D = new float[k * sanity_query_number];
@@ -222,20 +229,25 @@ int main() {
          << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
          << " us" << std::endl;
 
-        // print results
+        // Test query time for query number from 0 to test_max_number
         TEST_TIME_FUNC(index.search(i, xq, k, D, I), test_max_number, "CPU_BF")
-        printf("I (5 first results)=\n");
-        for(int i = 0; i < 5; i++) {
-            for(int j = 0; j < k; j++)
-                printf("%5ld ", I[i * k + j]);
-            printf("\n");
-        }
 
-        printf("I (5 last results)=\n");
-        for(int i = nq - 5; i < nq; i++) {
-            for(int j = 0; j < k; j++)
-                printf("%5ld ", I[i * k + j]);
-            printf("\n");
+        // print results
+        if(do_print_results)
+        {
+          printf("I (5 first results)=\n");
+          for(int i = 0; i < 5; i++) {
+              for(int j = 0; j < k; j++)
+                  printf("%5ld ", I[i * k + j]);
+              printf("\n");
+          }
+
+          printf("I (5 last results)=\n");
+          for(int i = nq - 5; i < nq; i++) {
+              for(int j = 0; j < k; j++)
+                  printf("%5ld ", I[i * k + j]);
+              printf("\n");
+          }
         }
 
         delete [] I;
