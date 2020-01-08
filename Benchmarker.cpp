@@ -1,44 +1,3 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-#define PRINT_TIME_FUNC(EXPR, method_, job_)                                           \
-    start = std::chrono::steady_clock::now();                                          \
-    EXPR;                                                                              \
-    end = std::chrono::steady_clock::now();                                            \
-    std::cout << "[TIME] for job_ using method_  " << " in microseconds : "            \
-         << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() \
-         << " us" << std::endl;                                                        \
-
-#define CPU_KNN_TEST 1     
-#define GPU_KNN_TEST 1
-#define CPU_ANN_TEST 0     
-#define GPU_ANN_TEST 0
-
-#define TEST_TIME
-
-#ifdef TEST_TIME
-#define TEST_TIME_FUNC(EXPR, MAX_TIME, TEST_NAME)                                          \
-  {                                                                                        \
-    for(int i = 0; i < MAX_TIME; i ++){                                                    \
-      start = std::chrono::steady_clock::now();                                            \
-      EXPR;                                                                                \
-      end = std::chrono::steady_clock::now();                                              \
-      std::cout << "[SEARCH TIME] "<< TEST_NAME << " " << i << " records in us: "          \
-           << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()   \
-           << " us" << std::endl;                                                          \
-    }                                                                                      \
-  }                                                                                        
-#else
-#define TEST_TIME_FUNC(EXPR, MAX_TIME, TEST_NAME) {}
-#endif
-
-const int sanity_query_number = 1;
-const int test_maxtime = 1000;
-
 #include <cstdio>
 #include <cstdlib>
 #include <chrono>
@@ -59,44 +18,7 @@ const int test_maxtime = 1000;
 #include <faiss/gpu/StandardGpuResources.h>
 #include <faiss/gpu/utils/DeviceUtils.h>
 
-
-float * fvecs_read (const char *fname,
-                    size_t *d_out, size_t *n_out)
-{
-    FILE *f = fopen(fname, "r");
-    if(!f) {
-        fprintf(stderr, "could not open %s\n", fname);
-        perror("");
-        abort();
-    }
-    int d;
-    fread(&d, 1, sizeof(int), f);
-    assert((d > 0 && d < 1000000) || !"unreasonable dimension");
-    fseek(f, 0, SEEK_SET);
-    struct stat st;
-    fstat(fileno(f), &st);
-    size_t sz = st.st_size;
-    assert(sz % ((d + 1) * 4) == 0 || !"weird file size");
-    size_t n = sz / ((d + 1) * 4);
-
-    *d_out = d; *n_out = n;
-    float *x = new float[n * (d + 1)];
-    size_t nr = fread(x, sizeof(float), n * (d + 1), f);
-    assert(nr == n * (d + 1) || !"could not read whole file");
-
-    // shift array to remove row headers
-    for(size_t i = 0; i < n; i++)
-        memmove(x + i * d, x + 1 + i * (d + 1), d * sizeof(*x));
-
-    fclose(f);
-    return x;
-}
-
-// not very clean, but works as long as sizeof(int) == sizeof(float)
-int *ivecs_read(const char *fname, size_t *d_out, size_t *n_out)
-{
-    return (int*)fvecs_read(fname, d_out, n_out);
-}
+#include "Config.h"
 
 
 int main() {
@@ -217,7 +139,7 @@ int main() {
              << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
              << " us" << std::endl;
 
-        TEST_TIME_FUNC(gpu_index->search(i, xq, k, D, I), test_maxtime, "GPU_BF")
+        TEST_TIME_FUNC(gpu_index->search(i, xq, k, D, I), test_max_number, "GPU_BF")
 
         // print results
         printf("I (5 first results)=\n");
@@ -301,7 +223,7 @@ int main() {
          << " us" << std::endl;
 
         // print results
-        TEST_TIME_FUNC(index.search(i, xq, k, D, I), test_maxtime, "CPU_BF")
+        TEST_TIME_FUNC(index.search(i, xq, k, D, I), test_max_number, "CPU_BF")
         printf("I (5 first results)=\n");
         for(int i = 0; i < 5; i++) {
             for(int j = 0; j < k; j++)
@@ -384,11 +306,6 @@ int main() {
           );
       std::cout << "After" << nb << " CASTing" << std::endl; 
       
-      // if(dynamic_cast<faiss::gpu::GpuIndexIVFPQ*>(gpu_index)){
-      //   std::cout << " " << nb << " CASTED" << std::endl; 
-      // } 
-      // std::cout << " " << nb << " CASTED" << std::endl; 
-
       start = std::chrono::steady_clock::now();
       gpu_index->train(nb, xb);
       end = std::chrono::steady_clock::now();
