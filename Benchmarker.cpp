@@ -68,7 +68,7 @@ int main() {
 #if GPU_KNN_TEST >0
     faiss::IndexFlatL2 cpu_index(d);
 
-    printf("migrating index from cpu to gpu");
+    printf("migrating index from cpu to gpu\n");
     start = std::chrono::steady_clock::now();
     faiss::Index *gpu_index;
     if (devs.size() > 1){
