@@ -20,6 +20,7 @@ TEST=${TEST}_BaseNumber.${NUMBER_BASE}_QueryNumber.${NUMBER_QUERY}
 if [[ $(cat Config.h | grep undef | grep //) ]]; then
     NUMBER=$(cat Config.h | grep test_max_number | tr -dc '0-9')
     TEST=${TEST}_QueryNumberRangeTest.${NUMBER} 
+    TEST_TIME=1
 fi
 
 echo Test name is ${TEST}
@@ -39,6 +40,12 @@ mkdir -p ${LOG_DIR}
 mkdir -p ${CSV_DIR}
 mkdir -p ${NVVP_DIR}
 make clean && make all
+
+# NVVP for visualization
+if [ "$TEST_TIME" = "1" ]; then
+    ./Benchmarker
+    exit
+fi
 
 # NVVP for visualization
 if [ "$NVVP" = "1" ]; then

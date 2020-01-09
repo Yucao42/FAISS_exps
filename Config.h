@@ -23,7 +23,7 @@ const int sanity_query_number = 1;
 const int test_max_number = 1000;
 
 // Explicit set number of query, default 0 will be ignored
-const size_t nq_ = 33;
+const size_t nq_ = 1000;
 
 // Explicit set number of base vectors added to DB, default 0 will be ignored
 const size_t nb_ = 0;

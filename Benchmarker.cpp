@@ -178,7 +178,6 @@ int main() {
     start = std::chrono::steady_clock::now();
     index.add(nb, xb);                     // add vectors to the index
     end = std::chrono::steady_clock::now();
-    printf("ntotal = %ld\n", gpu_index->ntotal);
     std::cout << "[ADD TIME] [CPU BF] add " << nb << " records in microseconds : "
          << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
          << " us" << std::endl;
@@ -224,7 +223,6 @@ int main() {
         auto start = std::chrono::steady_clock::now();
         index.search(nq, xq, k, D, I);
         auto end = std::chrono::steady_clock::now();
-        printf("ntotal = %ld\n", gpu_index->ntotal);
         std::cout << "[SEARCH TIME] [CPU BF]Search time for queries " << nq << " records in microseconds : "
          << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
          << " us" << std::endl;
