@@ -167,6 +167,7 @@ for use_gpu in range(2):
             t = (time.time() - t1) * 1000
             print(i, "Time elapse {:.2f} ms".format(t))
             search_time[use_gpu].append(t)
+            del index
     
 
 
@@ -192,7 +193,7 @@ for use_gpu in range(2):
     plt.title(name, fontsize=14, fontweight='bold')
     plt.xlabel("Query Batch number (q)")
     plt.ylabel(f"Time in milleseconds")
-    plt.savefig(f'{name}.jpg'.replace(" ", '_'), dpi=400)
+    plt.savefig(f'{name}_{TEST_NUMBER_MAX}.jpg'.replace(" ", '_'), dpi=400)
 
 np.save(f'result_{TEST_NUMBER_MAX}.npy', np.asarray(search_time))
 np.save(f'time_{TEST_NUMBER_MAX}.npy', np.asarray(time))

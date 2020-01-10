@@ -5,7 +5,7 @@
 
 -include makefile.inc
 
-CPU_TARGETS = IVFPQ
+CPU_TARGETS = 
 GPU_TARGETS = Benchmarker
 
 default: cpu

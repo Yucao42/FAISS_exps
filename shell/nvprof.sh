@@ -1,10 +1,21 @@
 # Parse the config.h file
 TEST=Time
+DEBUG=0
 if [[ $(cat Config.h | grep CPU_KNN | grep 1) ]]; then
     TEST=${TEST}_CPU.KNN
 fi
 if [[ $(cat Config.h | grep GPU_KNN | grep 1) ]]; then
     TEST=${TEST}_GPU.KNN
+fi
+if [[ $(cat Config.h | grep CPU_ANN | grep 1) ]]; then
+    TEST=${TEST}_CPU.ANN
+    NUMBER=$(cat Config.h | grep nlist | tr -dc '0-9')
+    TEST=${TEST}_numcentroids.${NUMBER}
+fi
+if [[ $(cat Config.h | grep GPU_ANN | grep 1) ]]; then
+    TEST=${TEST}_GPU.ANN
+    NUMBER=$(cat Config.h | grep nlist | tr -dc '0-9')
+    TEST=${TEST}_numcentroids.${NUMBER}
 fi
 
 NUMBER_QUERY=$(cat Config.h | grep nq_ | tr -dc '0-9')
@@ -43,7 +54,11 @@ make clean && make all
 
 # NVVP for visualization
 if [ "$TEST_TIME" = "1" ]; then
-    ./Benchmarker
+    if [ "$DEBUG" = "1" ]; then
+        ./Benchmarker
+    else
+        ./Benchmarker >> ${LOG_DIR}/${TEST}.log
+    fi
     exit
 fi
 

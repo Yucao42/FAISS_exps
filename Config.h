@@ -1,17 +1,17 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define CPU_KNN_TEST 0     
-#define GPU_KNN_TEST 1
-#define CPU_ANN_TEST 0     
+#define CPU_KNN_TEST 0
+#define GPU_KNN_TEST 0
+#define CPU_ANN_TEST 1
 #define GPU_ANN_TEST 0
 
 // if multiple time is tested
 #define TEST_TIME
-#undef TEST_TIME
+// #undef TEST_TIME
 
 // Do sanity check or not
-const bool do_sanity_check = false;
+const bool do_sanity_check = true;
 
 // Print results or not
 const bool do_print_results = false;
@@ -20,13 +20,22 @@ const bool do_print_results = false;
 const int sanity_query_number = 1;
 
 // Test 0 to test_maxtime samples
-const int test_max_number = 1000;
+const int test_max_number = 10000;
 
 // Explicit set number of query, default 0 will be ignored
-const size_t nq_ = 1000;
+const size_t nq_ = 10000;
 
 // Explicit set number of base vectors added to DB, default 0 will be ignored
-const size_t nb_ = 0;
+const size_t nb_ = 10000;
+
+// Number of centroids for K-means
+const int nlist =  256;         
+
+// sub-quantizer
+const int m = 8;                             
+
+// k-NN k
+const int k = 10;
 
 // Timers
 auto start = std::chrono::steady_clock::now();

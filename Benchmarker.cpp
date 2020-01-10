@@ -24,9 +24,6 @@
 int main() {
     // Basic parameters
     size_t d = 128;                              // feature dimension
-    const int nlist =  100000;                   // number of centroids in coarse quantizer
-    const int m = 8;                             // sub-quantizer
-    const int k = 10;                            // k-NN k.
 
     // Load sift 1M Data
     // Training data
@@ -112,18 +109,21 @@ int main() {
              << " us" << std::endl;
 
         // print results
-        printf("I=\n");
-        for(int i = 0; i < sanity_query_number; i++) {
-            for(int j = 0; j < k; j++)
-                printf("%5ld ", I[i * k + j]);
-            printf("\n");
-        }
+        if(do_print_results)
+        {
+          printf("I=\n");
+          for(int i = 0; i < sanity_query_number; i++) {
+              for(int j = 0; j < k; j++)
+                  printf("%5ld ", I[i * k + j]);
+              printf("\n");
+          }
 
-        printf("D=\n");
-        for(int i = 0; i < sanity_query_number; i++) {
-            for(int j = 0; j < k; j++)
-                printf("%7g ", D[i * k + j]);
-            printf("\n");
+          printf("D=\n");
+          for(int i = 0; i < sanity_query_number; i++) {
+              for(int j = 0; j < k; j++)
+                  printf("%7g ", D[i * k + j]);
+              printf("\n");
+          }
         }
 
         delete [] I;
@@ -142,7 +142,7 @@ int main() {
              << " us" << std::endl;
 
         // Test query time for query number from 0 to test_max_number
-        TEST_TIME_FUNC(gpu_index->search(i, xq, k, D, I), test_max_number, "GPU_BF")
+        TEST_TIME_FUNC(gpu_index->search(i, xq, k, D, I), test_max_number, "GPU_KNN")
 
         // print results
         if(do_print_results)
@@ -197,18 +197,21 @@ int main() {
              << " us" << std::endl;
 
         // print results
-        printf("I=\n");
-        for(int i = 0; i < sanity_query_number; i++) {
-            for(int j = 0; j < k; j++)
-                printf("%5ld ", I[i * k + j]);
-            printf("\n");
-        }
+        if(do_print_results)
+        {
+          printf("I=\n");
+          for(int i = 0; i < sanity_query_number; i++) {
+              for(int j = 0; j < k; j++)
+                  printf("%5ld ", I[i * k + j]);
+              printf("\n");
+          }
 
-        printf("D=\n");
-        for(int i = 0; i < sanity_query_number; i++) {
-            for(int j = 0; j < k; j++)
-                printf("%7g ", D[i * k + j]);
-            printf("\n");
+          printf("D=\n");
+          for(int i = 0; i < sanity_query_number; i++) {
+              for(int j = 0; j < k; j++)
+                  printf("%7g ", D[i * k + j]);
+              printf("\n");
+          }
         }
 
         delete [] I;
@@ -228,7 +231,7 @@ int main() {
          << " us" << std::endl;
 
         // Test query time for query number from 0 to test_max_number
-        TEST_TIME_FUNC(index.search(i, xq, k, D, I), test_max_number, "CPU_BF")
+        TEST_TIME_FUNC(index.search(i, xq, k, D, I), test_max_number, "CPU_KNN")
 
         // print results
         if(do_print_results)
@@ -286,11 +289,16 @@ int main() {
            << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
            << " us" << std::endl;
 
-          printf("I=\n");
-          for(int i = nq - 5; i < nq; i++) {
-              for(int j = 0; j < k; j++)
-                  printf("%5ld ", I[i * k + j]);
-              printf("\n");
+          // Test query time for query number from 0 to test_max_number
+          TEST_TIME_FUNC(index.search(i, xq, k, D, I), test_max_number, "CPU_ANN")
+          if (do_print_results)
+          {
+            printf("I=\n");
+            for(int i = nq - 5; i < nq; i++) {
+                for(int j = 0; j < k; j++)
+                    printf("%5ld ", I[i * k + j]);
+                printf("\n");
+            }
           }
 
           delete [] I;
@@ -307,13 +315,22 @@ int main() {
       index_cpu.nprobe = 10;
       index_cpu.verbose = true;
       std::cout << "Before" << nb << " CASTing" << std::endl; 
-      faiss::Index *gpu_index =
-          faiss::gpu::index_cpu_to_gpu_multiple(
-              res,
-              devs,
-              &index_cpu,
-              &option
-          );
+      faiss::Index *gpu_index;
+      if (devs.size() > 1){
+          gpu_index =faiss::gpu::index_cpu_to_gpu_multiple(
+                        res,
+                        devs,
+                        &index_cpu,
+                        &option
+                    );}
+      else{
+          gpu_index =faiss::gpu::index_cpu_to_gpu(
+                        res[0],
+                        1,
+                        &index_cpu
+                    );
+      }
+
       std::cout << "After" << nb << " CASTing" << std::endl; 
       
       start = std::chrono::steady_clock::now();
@@ -338,15 +355,20 @@ int main() {
           start = std::chrono::steady_clock::now();
           gpu_index->search(nq, xq, k, D, I);
           end = std::chrono::steady_clock::now();
-          std::cout << "[SEARCH TIME] [CPU ANN] " << 1000 << " records in microseconds : "
+          std::cout << "[SEARCH TIME] [GPU ANN] " << 1000 << " records in microseconds : "
            << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
            << " us" << std::endl;
 
-          printf("I=\n");
-          for(int i = nq - 5; i < nq; i++) {
-              for(int j = 0; j < k; j++)
-                  printf("%5ld ", I[i * k + j]);
-              printf("\n");
+          // Test query time for query number from 0 to test_max_number
+          TEST_TIME_FUNC(gpu_index->search(i, xq, k, D, I), test_max_number, "GPU_ANN")
+          if (do_print_results)
+          {
+            printf("I=\n");
+            for(int i = nq - 5; i < nq; i++) {
+                for(int j = 0; j < k; j++)
+                    printf("%5ld ", I[i * k + j]);
+                printf("\n");
+            }
           }
 
           delete [] I;
