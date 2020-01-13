@@ -24,6 +24,7 @@
 int main() {
     // Basic parameters
     size_t d = 128;                              // feature dimension
+    int gpu_devno = 0;                           // gpu machine that is used. 
 
     // Load sift 1M Data
     // Training data
@@ -41,8 +42,11 @@ int main() {
     assert(d == d3 || !"query does not have same dimension as train set");
 
     // If predefined sizes
+#ifndef TEST_TIME
     CHECK_REPLACE(nq, nq_)
+#endif
     CHECK_REPLACE(nb, nb_)
+    CHECK_REPLACE(gpu_devno, gpu_devno_)
     printf("number of base vectors %d \n", nb);
 
     int ngpus = faiss::gpu::getNumDevices();
@@ -52,7 +56,7 @@ int main() {
     std::vector<int> devs;
     for(int i = 0; i < ngpus; i++) {
         res.push_back(new faiss::gpu::StandardGpuResources);
-        if(i == 1){
+        if(i == 0){
             devs.push_back(i);
         }
     }
