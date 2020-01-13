@@ -6,12 +6,18 @@
 #define CPU_ANN_TEST 0
 #define GPU_ANN_TEST 0
 
+// if the data is initialized from random
+#define RANDOM_INIT 1
+
 // if multiple time is tested
 #define TEST_TIME
 // #undef TEST_TIME
 
+// Data dimension
+const int dimension_ = 4;
+
 // Do sanity check or not
-const bool do_sanity_check = true;
+const bool do_sanity_check = false;
 
 // Print results or not
 const bool do_print_results = false;
@@ -21,6 +27,9 @@ const int sanity_query_number = 1;
 
 // Test 0 to test_maxtime samples
 const int test_max_number = 1000;
+
+// Explicit set number of training, default 0 will be ignored
+const size_t nt_ = 10000;
 
 // Explicit set number of query, default 0 will be ignored
 const size_t nq_ = 10000;

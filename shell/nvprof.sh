@@ -12,6 +12,11 @@ if [[ $(cat Config.h | grep CPU_ANN | grep 1) ]]; then
     NUMBER=$(cat Config.h | grep nlist | tr -dc '0-9')
     TEST=${TEST}_numcentroids.${NUMBER}
 fi
+if [[ $(cat Config.h | grep RANDOM_INIT | grep 1) ]]; then
+    TEST=${TEST}_RANDOM
+    NUMBER=$(cat Config.h | grep dimension_ | tr -dc '0-9')
+    TEST=${TEST}.${NUMBER}
+fi
 if [[ $(cat Config.h | grep GPU_ANN | grep 1) ]]; then
     TEST=${TEST}_GPU.ANN
     NUMBER=$(cat Config.h | grep nlist | tr -dc '0-9')

@@ -23,11 +23,13 @@
 
 int main() {
     // Basic parameters
-    size_t d = 128;                              // feature dimension
+    size_t d(dimension_);                              // feature dimension
     int gpu_devno = 0;                           // gpu machine that is used. 
 
     // Load sift 1M Data
     // Training data
+#if RANDOM_INIT < 1
+    // Read from SIFT database
     size_t nt;
     float *xt = fvecs_read("sift/sift_learn.fvecs", &d, &nt);
 
@@ -40,6 +42,23 @@ int main() {
     size_t d3, nq;
     float *xq = fvecs_read("sift/sift_query.fvecs", &d3, &nq);
     assert(d == d3 || !"query does not have same dimension as train set");
+#else
+    size_t nt(nt_), nb(nb_), nq(nq_);
+    float *xb = new float[d * nb];
+    float *xq = new float[d * nq];
+
+    for(long i = 0; i < nb; i++) {
+        for(long j = 0; j < d; j++)
+            xb[d * i + j] = drand48();
+        xb[d * i] += i / 1000.;
+    }
+
+    for(int i = 0; i < nq; i++) {
+        for(int j = 0; j < d; j++)
+            xq[d * i + j] = drand48();
+        xq[d * i] += i / 1000.;
+    }
+#endif
 
     // If predefined sizes
 #ifndef TEST_TIME
