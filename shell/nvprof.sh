@@ -22,7 +22,9 @@ if [[ $(cat Config.h | grep GPU_ANN | grep 1) ]]; then
     NUMBER=$(cat Config.h | grep nlist | tr -dc '0-9')
     TEST=${TEST}_numcentroids.${NUMBER}
 fi
-
+if [[ $(cat Config.h | grep MEMORY_FOOTPRINT | grep 1) ]]; then
+    MEMORY_FOOTPRINT=1
+fi
 NUMBER_QUERY=$(cat Config.h | grep nq_ | tr -dc '0-9')
 NUMBER_BASE=$(cat Config.h | grep nb_ | tr -dc '0-9')
 if [ "$NUMBER_QUERY" = "0" ]; then
@@ -67,6 +69,11 @@ if [ "$TEST_TIME" = "1" ]; then
     exit
 fi
 
+# Memory footprint
+if [ "$MEMORY_FOOTPRINT" = "1" ]; then
+    ./Benchmarker
+    exit
+fi
 # NVVP for visualization
 if [ "$NVVP" = "1" ]; then
     nvprof --export-profile ${NVVP_DIR}/${TEST}.nvvp -f ./Benchmarker

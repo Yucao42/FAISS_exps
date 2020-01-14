@@ -25,6 +25,7 @@ int main() {
     // Basic parameters
     size_t d(dimension_);                              // feature dimension
     int gpu_devno = 0;                           // gpu machine that is used. 
+    int pid = getpid();
 
     // Load sift 1M Data
     // Training data
@@ -198,12 +199,14 @@ int main() {
     faiss::IndexFlatL2 index(d);           // call constructor
     printf("is_trained = %s\n", index.is_trained ? "true" : "false");
 
+    MEMORY_FOOTPRINT_FUNC("before adding")
     start = std::chrono::steady_clock::now();
     index.add(nb, xb);                     // add vectors to the index
     end = std::chrono::steady_clock::now();
     std::cout << "[ADD TIME] [CPU BF] add " << nb << " records in microseconds : "
          << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
          << " us" << std::endl;
+    MEMORY_FOOTPRINT_FUNC("after adding")
     printf("ntotal = %ld\n", index.ntotal);
 
 
@@ -273,6 +276,7 @@ int main() {
               printf("\n");
           }
         }
+        MEMORY_FOOTPRINT_FUNC("post search")
 
         delete [] I;
         delete [] D;
@@ -399,6 +403,7 @@ int main() {
       }
     }
 #endif
+    MEMORY_FOOTPRINT_FUNC("post search, I/D freed")
     delete [] xb;
     delete [] xq;
     for(int i = 0; i < ngpus; i++) {

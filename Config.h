@@ -7,11 +7,14 @@
 #define GPU_ANN_TEST 0
 
 // if the data is initialized from random
-#define RANDOM_INIT 1
+#define RANDOM_INIT 0
+
+// if the data is initialized from random
+#define MEMORY_FOOTPRINT 1
 
 // if multiple time is tested
 #define TEST_TIME
-// #undef TEST_TIME
+#undef TEST_TIME
 
 // Data dimension
 const int dimension_ = 4;
@@ -69,7 +72,18 @@ auto end = std::chrono::steady_clock::now();
     }                                                                                      \
   }                                                                                        
 #else
-#define TEST_TIME_FUNC(EXPR, MAX_TIME, TEST_NAME) {}
+#define TEST_TIME_FUNC(EXPR, MAX_TIME, TEST_NAME) 
+#endif
+
+#ifdef MEMORY_FOOTPRINT
+#define MEMORY_FOOTPRINT_FUNC(EXPR)                                                        \
+  {                                                                                        \
+    int pid = getpid();                                                                    \
+    std::cout << "[MEMORY USAGE] " << EXPR << " is " << getValue(pid)                      \ 
+    << " KB." << std::endl;                                                                \
+  }                                                                                        
+#else
+#define MEMORY_FOOTPRINT_FUNC(EXPR) 
 #endif
 
 #define PRINT_TIME_FUNC(EXPR, method_, job_)                                               \
@@ -123,6 +137,34 @@ float * fvecs_read (const char *fname,
 int *ivecs_read(const char *fname, size_t *d_out, size_t *n_out)
 {
     return (int*)fvecs_read(fname, d_out, n_out);
+}
+
+// Read memory consumption for Linux system
+int parseLine(char* line){
+    // This assumes that a digit will be found and the line ends in " Kb".
+    int i = strlen(line);
+    const char* p = line;
+    while (*p <'0' || *p > '9') p++;
+    line[i-3] = '\0';
+    i = atoi(p);
+    return i;
+}
+
+int getValue(int pid){ //Note: this value is in KB!
+    char file_name[100];
+    sprintf(file_name, "/proc/%d/status", pid);
+    FILE* file = fopen(file_name, "r");
+    int result = -1;
+    char line[128];
+
+    while (fgets(line, 128, file) != NULL){
+        if (strncmp(line, "VmSize:", 7) == 0){
+            result = parseLine(line);
+            break;
+        }
+    }
+    fclose(file);
+    return result;
 }
 
 #endif
