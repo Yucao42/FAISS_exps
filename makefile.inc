@@ -4,23 +4,32 @@
 # LICENSE file in the root directory of this source tree.
 
 # Modify this to where FAISS is installed.
-FAISS_HOME   = ${HOME}/Documents/faiss/faiss
+FAISS_HOME   = ${HOME}/faiss
+CUDA_HOME = /usr/local/cuda-10.0
+
+# If using cims machine
+ifeq (${HOME},/home/yc3390)
+	FAISS_HOME   = ${HOME}/Documents/faiss/faiss
+	CUDA_HOME = /usr/local/stow/cuda-10.0
+	# FAISS_HOME   = ${HOME}/Documents/faiss_time/faiss
+endif
+
 # FAISS_HOME   = ${HOME}/Documents/faiss_time/faiss
 
 CXX          = g++ -std=c++11
 CXXCPP       = g++ -std=c++11 -E
-CPPFLAGS     = -DFINTEGER=int  -fopenmp -I/usr/local/stow/cuda-10.0/include  -g \
+CPPFLAGS     = -DFINTEGER=int  -fopenmp -I${CUDA_HOME}/include  -g \
 -I${FAISS_HOME} -I${FAISS_HOME}/.. -lfaiss -L$(FAISS_HOME)
 CXXFLAGS     = -fPIC -m64 -Wno-sign-compare -g -O3 -Wall -Wextra
 CPUFLAGS     = -mpopcnt -msse4
-LDFLAGS      = -fopenmp  -L/usr/local/stow/cuda-10.0/lib64
+LDFLAGS      = -fopenmp  -L${CUDA_HOME}/lib64
 LIBS         = -lopenblas   -lcudart -lcublas
-PYTHONCFLAGS =   -I/home/yc3390/anaconda3/include
+PYTHONCFLAGS =   -I${HOME}/anaconda3/include
 SWIGFLAGS    = -DSWIGWORDSIZE64
 RTFLAGS      = -Wl,-rpath=${FAISS_HOME}
 
-NVCC         = /usr/local/stow/cuda-10.0/bin/nvcc
-CUDA_ROOT    = /usr/local/stow/cuda-10.0
+NVCC         = ${CUDA_HOME}/bin/nvcc
+CUDA_ROOT    = ${CUDA_HOME}
 CUDA_ARCH    = -gencode=arch=compute_35,code=compute_35 \
 -gencode=arch=compute_52,code=compute_52 \
 -gencode=arch=compute_60,code=compute_60 \
